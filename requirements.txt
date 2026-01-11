@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+supabase
+python-dotenv
+psycopg2-binary # For direct PostgreSQL connection
+sqlalchemy      # (Optional) For ORM/migration support
