@@ -1,5 +1,6 @@
+from uuid import UUID
+
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from sqlalchemy import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import (
