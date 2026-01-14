@@ -16,7 +16,7 @@ app = FastAPI(title="MGFisioBook API", docs_url="/docs", redoc_url="/redoc")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://https://mgfisiobook.onrender.com", "http://localhost", "*"],
+    allow_origins=["https://mgfisiobook.onrender.com", "http://localhost", "*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -29,3 +29,10 @@ app.include_router(availability.router, prefix="/availability", tags=["availabil
 app.include_router(invoice.router, prefix="/invoices", tags=["invoices"])
 app.include_router(treatment.router, prefix="/treatments", tags=["treatments"])
 app.include_router(free_slots.router, prefix="/free-slots", tags=["free slots"])
+
+
+@app.get("/")
+async def root_redirect():
+    from fastapi.responses import RedirectResponse
+
+    return RedirectResponse(url="/docs")
