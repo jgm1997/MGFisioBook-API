@@ -9,9 +9,11 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from app.core.config import settings
 from app.models import (  # noqa: F401
     appointment,
+    invoice,
     patient,
     therapist,
     therapist_availability,
+    treatment,
 )
 from app.models.base import Base
 

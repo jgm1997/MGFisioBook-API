@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 class AppointmentBase(BaseModel):
     therapist_id: UUID
+    treatment_id: UUID
     start_time: datetime
     end_time: datetime
     notes: Optional[str] = None
@@ -20,6 +21,7 @@ class AppointmentUpdate(BaseModel):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     notes: Optional[str] = None
+    status: Optional[str] = None
 
 
 class AppointmentPublic(AppointmentBase):

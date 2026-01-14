@@ -22,6 +22,9 @@ class Appointment(Base):
     therapist_id = Column(
         UUID(as_uuid=True), ForeignKey("therapists.id"), nullable=False
     )
+    treatment_id = Column(
+        UUID(as_uuid=True), ForeignKey("treatments.id"), nullable=False
+    )
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=False)
     status = Column(
@@ -31,3 +34,4 @@ class Appointment(Base):
 
     patient = relationship("Patient")
     therapist = relationship("Therapist")
+    treatment = relationship("Treatment")

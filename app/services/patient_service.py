@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select
@@ -15,8 +16,9 @@ async def create_patient(db: AsyncSession, data: PatientCreate):
     return patient
 
 
-async def get_patient(db: AsyncSession, id: UUID):
-    result = await db.execute(select(Patient).where(Patient.id == id))
+async def get_patient(db: AsyncSession, id: UUID) -> Optional[Patient]:
+    query = select(Patient).where(Patient.id == id)
+    result = await db.execute(query)
     return result.scalar_one_or_none()
 
 

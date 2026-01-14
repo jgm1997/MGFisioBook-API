@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -17,7 +18,7 @@ async def __has_conflict(
         Appointment.therapist_id == therapist_id,
         Appointment.start_time < end,
         Appointment.end_time > start,
-        Appointment.status == "scheduled",
+        Appointment.status == AppointmentStatus.scheduled,
     )
     result = await db.execute(query)
     return result.scalar_one_or_none() is not None
@@ -56,6 +57,7 @@ async def create_appointment(
     appointment = Appointment(
         patient_id=patient_id,
         therapist_id=data.therapist_id,
+        treatment_id=data.treatment_id,
         start_time=data.start_time,
         end_time=data.end_time,
         notes=data.notes,
@@ -67,7 +69,9 @@ async def create_appointment(
     return appointment
 
 
-async def get_appointment(db: AsyncSession, appointment_id: UUID) -> Appointment:
+async def get_appointment(
+    db: AsyncSession, appointment_id: UUID
+) -> Optional[Appointment]:
     query = select(Appointment).where(Appointment.id == appointment_id)
     result = await db.execute(query)
     return result.scalar_one_or_none()
@@ -139,8 +143,8 @@ async def update_appointment(
                 detail="Appointment conflicts with existing booking",
             )
 
-    for field, value in update_data.items():
-        setattr(appointment, field, value)
+    for k, v in update_data.items():
+        setattr(appointment, k, v)
 
     await db.commit()
     await db.refresh(appointment)
