@@ -1,5 +1,3 @@
-import os
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,14 +12,13 @@ from app.routers import (
     treatment,
 )
 
-app = FastAPI(
-    title="MGFisioBook API",
-    docs_url=None if os.getenv("ENV") == "production" else "/docs",
-    redoc_url=None if os.getenv("ENV") == "production" else "/redoc",
-)
+app = FastAPI(title="MGFisioBook API", docs_url="/docs", redoc_url="/redoc")
 
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=["https://https://mgfisiobook.onrender.com", "http://localhost", "*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
