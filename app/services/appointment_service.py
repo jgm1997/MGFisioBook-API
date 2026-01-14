@@ -1,0 +1,154 @@
+from datetime import datetime
+from uuid import UUID
+
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.appointment import Appointment, AppointmentStatus
+from app.models.therapist_availability import TherapistAvailability
+from app.schemas.appointment import AppointmentCreate, AppointmentUpdate
+
+
+async def __has_conflict(
+    db: AsyncSession, therapist_id: UUID, start: datetime, end: datetime
+) -> bool:
+    query = select(Appointment).where(
+        Appointment.therapist_id == therapist_id,
+        Appointment.start_time < end,
+        Appointment.end_time > start,
+        Appointment.status == "scheduled",
+    )
+    result = await db.execute(query)
+    return result.scalar_one_or_none() is not None
+
+
+async def __is_within_availability(
+    db: AsyncSession, therapist_id: UUID, start: datetime, end: datetime
+) -> bool:
+    weekday = start.strftime("%A").lower()
+
+    query = select(TherapistAvailability).where(
+        TherapistAvailability.therapist_id == therapist_id,
+        TherapistAvailability.weekday == weekday,
+        TherapistAvailability.start_time <= start.time(),
+        TherapistAvailability.end_time >= end.time(),
+    )
+    result = await db.execute(query)
+    return result.scalar_one_or_none() is not None
+
+
+async def create_appointment(
+    db: AsyncSession, patient_id: UUID, data: AppointmentCreate
+) -> Appointment:
+    if not await __is_within_availability(
+        db, data.therapist_id, data.start_time, data.end_time
+    ):
+        raise HTTPException(
+            status_code=400, detail="Therapist not available at this time."
+        )
+
+    if await __has_conflict(db, data.therapist_id, data.start_time, data.end_time):
+        raise HTTPException(
+            status_code=400, detail="Appointment conflicts with existing booking."
+        )
+
+    appointment = Appointment(
+        patient_id=patient_id,
+        therapist_id=data.therapist_id,
+        start_time=data.start_time,
+        end_time=data.end_time,
+        notes=data.notes,
+    )
+
+    db.add(appointment)
+    await db.commit()
+    await db.refresh(appointment)
+    return appointment
+
+
+async def get_appointment(db: AsyncSession, appointment_id: UUID) -> Appointment:
+    query = select(Appointment).where(Appointment.id == appointment_id)
+    result = await db.execute(query)
+    return result.scalar_one_or_none()
+
+
+async def list_all_appointments(db: AsyncSession) -> list[Appointment]:
+    query = select(Appointment).order_by(Appointment.start_time.desc())
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+async def list_therapist_appointments(
+    db: AsyncSession, therapist_id: UUID
+) -> list[Appointment]:
+    query = (
+        select(Appointment)
+        .where(Appointment.therapist_id == therapist_id)
+        .order_by(Appointment.start_time.desc())
+    )
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+async def list_patient_appointments(
+    db: AsyncSession, patient_id: UUID
+) -> list[Appointment]:
+    query = (
+        select(Appointment)
+        .where(Appointment.patient_id == patient_id)
+        .order_by(Appointment.start_time.desc())
+    )
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+async def update_appointment(
+    db: AsyncSession,
+    appointment: Appointment,
+    data: AppointmentUpdate,
+    allow_override: bool = False,
+) -> Appointment:
+    update_data = data.model_dump(exclude_unset=True)
+
+    new_start = update_data.get("start_time", appointment.start_time)
+    new_end = update_data.get("end_time", appointment.end_time)
+
+    if new_start != appointment.start_time or new_end != appointment.end_time:
+        if (
+            not await __is_within_availability(
+                db, appointment.therapist_id, new_start, new_end
+            )
+            and not allow_override
+        ):
+            raise HTTPException(
+                status_code=400, detail="Therapist not available at this time"
+            )
+
+        if (
+            await __has_conflict(
+                db,
+                appointment.therapist_id,
+                new_start,
+                new_end,
+            )
+            and not allow_override
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Appointment conflicts with existing booking",
+            )
+
+    for field, value in update_data.items():
+        setattr(appointment, field, value)
+
+    await db.commit()
+    await db.refresh(appointment)
+    return appointment
+
+
+async def cancel_appointment(db: AsyncSession, appointment: Appointment) -> Appointment:
+    appointment.status = AppointmentStatus.cancelled
+    await db.commit()
+    await db.refresh(appointment)
+    return appointment

@@ -7,7 +7,12 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import settings
-from app.models import patient, therapist  # noqa: F401
+from app.models import (  # noqa: F401
+    appointment,
+    patient,
+    therapist,
+    therapist_availability,
+)
 from app.models.base import Base
 
 config = context.config
