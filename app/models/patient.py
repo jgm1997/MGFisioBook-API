@@ -15,4 +15,4 @@ class Patient(Base):
     phone = Column(String, nullable=True)
     email = Column(String, nullable=False, unique=True)
     notes = Column(Text)
-    supabase_user_id = Column(String, nullable=False, unique=True)
+    supabase_user_id = Column(UUID(as_uuid=True), nullable=False, unique=True)

@@ -13,7 +13,7 @@ class PatientBase(BaseModel):
 
 
 class PatientCreate(PatientBase):
-    supabase_user_id: str
+    supabase_user_id: UUID
 
 
 class PatientUpdate(BaseModel):

@@ -44,9 +44,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.add_column(
-        "patients", sa.Column("supabase_user_id", sa.String(), nullable=False)
-    )
+    op.add_column("patients", sa.Column("supabase_user_id", sa.UUID(), nullable=False))
     op.create_unique_constraint(None, "patients", ["supabase_user_id"])
     # ### end Alembic commands ###
 

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.security import require_role
 from app.schemas.treatment import TreatmentCreate, TreatmentPublic
 from app.services.treatment_service import (
     create_treatment,
@@ -15,7 +16,9 @@ router = APIRouter()
 
 @router.post("/", response_model=TreatmentPublic)
 async def create_treatment_endpoint(
-    data: TreatmentCreate, db: AsyncSession = Depends(get_db)
+    data: TreatmentCreate,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_role("admin", "therapist")),
 ):
     return await create_treatment(db, data)
 

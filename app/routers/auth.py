@@ -1,5 +1,9 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from supabase import AuthInvalidCredentialsError
+from supabase_auth import AuthResponse
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -13,16 +17,25 @@ router = APIRouter()
 
 @router.post("/signup", response_model=TokenResponse)
 async def signup(data: SignupRequest, db: AsyncSession = Depends(get_db)):
-    result = supabase.auth.sign_up(
-        {"email": data.email, "password": data.password},
-        options={"data": {"role": "patient"}},
-    )
-
-    if result.get("error"):
-        raise HTTPException(status_code=400, detail=result["error"]["message"])
+    try:
+        result: AuthResponse = supabase.auth.sign_up(
+            {"email": data.email, "password": data.password},
+        )
+    except AuthInvalidCredentialsError:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     user = result.user
     token = result.session.access_token
+
+    supabase.auth.update_user(
+        {
+            "data": {
+                "first_name": data.first_name,
+                "last_name": data.last_name,
+                "role": "patient",
+            }
+        }
+    )
 
     await create_patient(
         db,
@@ -32,7 +45,7 @@ async def signup(data: SignupRequest, db: AsyncSession = Depends(get_db)):
             email=data.email,
             phone=None,
             notes=None,
-            supabase_user_id=user.id,
+            supabase_user_id=UUID(user.id),
         ),
     )
 
@@ -41,11 +54,11 @@ async def signup(data: SignupRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginRequest):
-    result = supabase.auth.sign_in_with_password(
-        {"email": data.email, "password": data.password}
-    )
-
-    if result.get("error"):
+    try:
+        result = supabase.auth.sign_in_with_password(
+            {"email": data.email, "password": data.password}
+        )
+    except AuthInvalidCredentialsError:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     return TokenResponse(access_token=result.session.access_token)
