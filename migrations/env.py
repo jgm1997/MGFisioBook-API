@@ -2,7 +2,8 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool
+from sqlalchemy import Column, Table, pool
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -17,6 +18,17 @@ from app.models import (  # noqa: F401
     treatment,
 )
 from app.models.base import Base
+
+# Provide a stub for the external Supabase auth.users table so Alembic
+# can resolve ForeignKey references during autogenerate. This table
+# is not managed by our models but exists in the database under the
+# `auth` schema in Supabase.
+Table(
+    "users",
+    Base.metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    schema="auth",
+)
 
 config = context.config
 fileConfig(config.config_file_name)

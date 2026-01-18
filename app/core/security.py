@@ -7,7 +7,7 @@ from app.core.config import settings
 bearer_scheme = HTTPBearer()
 
 
-async def get_current_user(token: str = Depends(bearer_scheme)):
+def get_current_user(token: str = Depends(bearer_scheme)):
     try:
         payload = jwt.decode(
             token.credentials,
@@ -28,7 +28,7 @@ async def get_current_user(token: str = Depends(bearer_scheme)):
 
 
 def require_role(*roles):
-    async def wrapper(user=Depends(get_current_user)):
+    def wrapper(user=Depends(get_current_user)):
         if user["role"] not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -37,3 +37,6 @@ def require_role(*roles):
         return user
 
     return wrapper
+
+
+require_admin = require_role("admin")

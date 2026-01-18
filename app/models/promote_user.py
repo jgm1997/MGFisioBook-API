@@ -3,4 +3,4 @@ from pydantic import BaseModel
 
 
 class PromoteUserRequest(BaseModel):
-    role: str = Field(..., regex="^(therapist|admin)$x")
+    role: str = Field(..., regex="^(therapist|admin)$")
