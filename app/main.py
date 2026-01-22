@@ -6,6 +6,7 @@ from app.routers import (
     appointment,
     auth,
     availability,
+    device,
     free_slots,
     invoice,
     patient,
@@ -31,6 +32,7 @@ app.include_router(availability.router, prefix="/availability", tags=["availabil
 app.include_router(invoice.router, prefix="/invoices", tags=["invoices"])
 app.include_router(treatment.router, prefix="/treatments", tags=["treatments"])
 app.include_router(free_slots.router, prefix="/free-slots", tags=["free slots"])
+app.include_router(device.router, prefix="/devices", tags=["devices"])
 
 
 @app.get("/")
