@@ -1,4 +1,4 @@
-"""initial
+"""device
 
 Revision ID: 0008
 Revises: 0007
@@ -19,8 +19,8 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade():
     op.create_table(
         "devices",
-        sa.Column("id", sa.Integer, primary_key=True),
-        sa.Column("user_id", sa.String, nullable=False),
+        sa.Column("id", sa.UUID, primary_key=True),
+        sa.Column("supabase_user_id", sa.UUID, nullable=False),
         sa.Column("token", sa.String, nullable=False),
         sa.Column("platform", sa.String, nullable=False),
         sa.Column(
