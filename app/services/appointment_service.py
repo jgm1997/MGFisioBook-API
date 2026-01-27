@@ -184,11 +184,10 @@ async def update_appointment(
     return appointment
 
 
-async def cancel_appointment(db: AsyncSession, appointment: Appointment) -> Appointment:
-    appointment.status = AppointmentStatus.cancelled
+async def delete_appointment(db: AsyncSession, appointment: Appointment) -> dict:
+    await db.delete(appointment)
     await db.commit()
-    await db.refresh(appointment)
-    return appointment
+    return {"detail": "Appointment cancelled"}
 
 
 @staticmethod

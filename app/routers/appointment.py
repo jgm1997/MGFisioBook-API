@@ -16,8 +16,8 @@ from app.schemas.appointment import (
     AppointmentUpdate,
 )
 from app.services.appointment_service import (
-    cancel_appointment,
     create_appointment,
+    delete_appointment,
     get_appointment,
     list_all_appointments,
     list_patient_appointments,
@@ -139,18 +139,18 @@ async def cancel_appointment_endpoint(
     role = user["role"]
 
     if role == "admin":
-        return await cancel_appointment(db, appt)
+        return await delete_appointment(db, appt)
 
     if role == "patient":
         patient = await get_patient(db, user["id"])
         if not patient or appt.patient_id != patient.id:
             raise HTTPException(status_code=403, detail=NOT_ALLOWED_ERROR)
-        return await cancel_appointment(db, appt)
+        return await delete_appointment(db, appt)
 
     if role == "therapist":
         therapist = await get_therapist(db, user["id"])
         if not therapist or appt.therapist_id != therapist.id:
             raise HTTPException(status_code=403, detail=NOT_ALLOWED_ERROR)
-        return await cancel_appointment(db, appt)
+        return await delete_appointment(db, appt)
 
     raise HTTPException(status_code=403, detail=UNKNOWN_ROLE_ERROR)
