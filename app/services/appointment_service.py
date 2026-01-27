@@ -10,6 +10,7 @@ from app.models.appointment import Appointment, AppointmentStatus
 from app.models.therapist_availability import TherapistAvailability
 from app.models.treatment import Treatment
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate
+from app.schemas.availability import AvailabilitySlot
 from app.services.email_notification_service import send_appointment
 from app.services.push_notification_service import send_push_to_user
 
@@ -191,7 +192,9 @@ async def cancel_appointment(db: AsyncSession, appointment: Appointment) -> Appo
 
 
 @staticmethod
-async def get_daily_availability(db: AsyncSession, therapist_id: UUID, date: date):
+async def get_daily_availability(
+    db: AsyncSession, therapist_id: UUID, date: date
+) -> list[AvailabilitySlot]:
     start = datetime.combine(date, datetime.min.time())
     end = datetime.combine(date, datetime.max.time())
 
@@ -201,11 +204,11 @@ async def get_daily_availability(db: AsyncSession, therapist_id: UUID, date: dat
         next_slot = current + timedelta(minutes=30)
         conflict = await has_conflict(db, therapist_id, current, next_slot)
         slots.append(
-            {
-                "start": current,
-                "end": next_slot,
-                "available": not conflict,
-            }
+            AvailabilitySlot(
+                start=current,
+                end=next_slot,
+                available=not conflict,
+            )
         )
         current = next_slot
 

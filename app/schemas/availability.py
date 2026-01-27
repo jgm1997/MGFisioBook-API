@@ -13,3 +13,9 @@ class AvailabilityCreate(BaseModel):
 class AvailabilityPublic(AvailabilityCreate):
     id: UUID
     model_config = {"from_attributes": True}
+
+
+class AvailabilitySlot(BaseModel):
+    start: time
+    end: time
+    available: bool
