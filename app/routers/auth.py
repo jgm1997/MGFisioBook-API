@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from supabase import AuthInvalidCredentialsError
-from supabase_auth import AuthResponse
+from supabase_auth import AuthResponse, User
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -69,5 +69,19 @@ async def login(data: LoginRequest):
 
 
 @router.get("/me", response_model=UserInfo)
-async def me(user=Depends(get_current_user)):
-    return UserInfo(**user)
+async def me(
+    db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)
+):
+    return UserInfo(
+        id=user.id,
+        email=user.email,
+        first_name=user.user_metadata.get("first_name"),
+        last_name=user.user_metadata.get("last_name"),
+        role=user.user_metadata.get("role"),
+    )
+
+
+@router.post("/logout")
+async def logout():
+    supabase.auth.sign_out()
+    return {"message": "Successfully logged out"}

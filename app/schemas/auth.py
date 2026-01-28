@@ -24,4 +24,6 @@ class TokenResponse(BaseModel):
 class UserInfo(BaseModel):
     id: UUID
     email: EmailStr
+    first_name: str
+    last_name: str
     role: str
