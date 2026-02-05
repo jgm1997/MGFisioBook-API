@@ -33,7 +33,7 @@ El workflow se ejecuta en:
 #### Tests Eliminados (Redundantes):
 - `test_appointment_router_edges.py` ❌
 - `test_appointment_router_roles.py` ❌
-- `test_routers_appointments_and_device_token.py` ❌
+- `test_routers_appointments_and_devices.py` ❌
 - `test_routers_appointments_and_invoices_extra.py` ❌
 - `test_invoice_router_more.py` ❌
 

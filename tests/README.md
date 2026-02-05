@@ -33,7 +33,7 @@ Los siguientes archivos fueron eliminados por redundancia y sus tests fueron con
 
 - `test_appointment_router_edges.py` → Consolidado en `test_appointments_comprehensive.py`
 - `test_appointment_router_roles.py` → Consolidado en `test_appointments_comprehensive.py`
-- `test_routers_appointments_and_device_token.py` → Funcionalidad en `test_appointments_comprehensive.py`
+- `test_routers_appointments_and_devices.py` → Funcionalidad en `test_appointments_comprehensive.py`
 - `test_routers_appointments_and_invoices_extra.py` → Consolidado en `test_invoices_comprehensive.py`
 - `test_invoice_router_more.py` → Consolidado en `test_invoices_comprehensive.py`
 

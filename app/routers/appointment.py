@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import (
@@ -139,18 +139,21 @@ async def cancel_appointment_endpoint(
     role = user["role"]
 
     if role == "admin":
-        return await delete_appointment(db, appt)
+        await delete_appointment(db, appt)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     if role == "patient":
         patient = await get_patient(db, user["id"])
         if not patient or appt.patient_id != patient.id:
             raise HTTPException(status_code=403, detail=NOT_ALLOWED_ERROR)
-        return await delete_appointment(db, appt)
+        await delete_appointment(db, appt)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     if role == "therapist":
         therapist = await get_therapist(db, user["id"])
         if not therapist or appt.therapist_id != therapist.id:
             raise HTTPException(status_code=403, detail=NOT_ALLOWED_ERROR)
-        return await delete_appointment(db, appt)
+        await delete_appointment(db, appt)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     raise HTTPException(status_code=403, detail=UNKNOWN_ROLE_ERROR)

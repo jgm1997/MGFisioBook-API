@@ -8,9 +8,9 @@ from app.models.therapist_availability import TherapistAvailability
 from app.schemas.therapist import TherapistCreate
 from app.schemas.treatment import TreatmentCreate, TreatmentUpdate
 from app.services.appointment_service import (
-    __has_conflict,
-    __is_within_availability,
-    cancel_appointment,
+    delete_appointment,
+    has_conflict,
+    is_within_availability,
 )
 from app.services.invoice_service import (
     create_invoice_for_appointment,
@@ -122,14 +122,14 @@ async def test_appointment_availability_and_conflict(db_session):
     start = datetime.now(timezone.utc) + timedelta(days=1)
     end = start + timedelta(minutes=30)
     assert (
-        await __is_within_availability(db_session, therapist.therapist_id, start, end)
+        await is_within_availability(db_session, therapist.therapist_id, start, end)
         is True
     )
-    assert await __has_conflict(db_session, therapist.therapist_id, start, end) is False
+    assert await has_conflict(db_session, therapist.therapist_id, start, end) is False
 
 
 @pytest.mark.asyncio
-async def test_cancel_appointment(db_session):
+async def test_delete_appointment(db_session):
     # create appointment record
     appt = Appointment(
         patient_id=uuid4(),
@@ -142,5 +142,5 @@ async def test_cancel_appointment(db_session):
     await db_session.commit()
     await db_session.refresh(appt)
 
-    appt = await cancel_appointment(db_session, appt)
-    assert appt.status.name == "cancelled"
+    appt = await delete_appointment(db_session, appt)
+    assert appt is not None

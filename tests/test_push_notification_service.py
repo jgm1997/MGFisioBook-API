@@ -50,10 +50,10 @@ async def test_send_push_with_tokens(db_session, monkeypatch):
     )
 
     # insert a device token directly
-    from app.models.device_token import DeviceToken
+    from app.models.device import Device
 
-    dt = DeviceToken(user_id=str(patient.supabase_user_id), token=uuid4().hex)
-    db_session.add(dt)
+    device = Device(user_id=str(patient.supabase_user_id), token=uuid4().hex)
+    db_session.add(device)
     await db_session.commit()
 
     called = {"sent": False}
