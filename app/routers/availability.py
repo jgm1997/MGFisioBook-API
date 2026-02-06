@@ -37,7 +37,7 @@ async def get_availability(
 @router.get("/me", response_model=list[AvailabilityPublic])
 async def get_my_availability(
     db: AsyncSession = Depends(get_db),
-    user=Depends(require_role("therapist")),
+    user=Depends(require_role("admin", "therapist")),
 ):
     therapist = await get_therapist(db, user["id"])
     return await list_therapist_availability(db, therapist.id)
