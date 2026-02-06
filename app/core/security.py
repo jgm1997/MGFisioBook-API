@@ -38,16 +38,51 @@ def _fetch_jwks() -> Dict[str, Any]:
         return JWKS_CACHE["keys"]
 
     # Fetch fresh JWKS
-    jwks_url = f"{settings.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
-    response = requests.get(jwks_url, timeout=5)
-    response.raise_for_status()
+    base = settings.supabase_url.rstrip("/")
 
-    jwks = response.json()
-    JWKS_CACHE["keys"] = jwks
-    JWKS_CACHE["fetched_at"] = now
+    # Try a list of plausible JWKS endpoints that supabase/gotrue may expose.
+    candidates = [
+        f"{base}/auth/v1/.well-known/jwks.json",
+        f"{base}/.well-known/jwks.json",
+        f"{base}/auth/v1/certs",
+        f"{base}/.well-known/openid-configuration",
+    ]
 
-    # print(f"Fetched JWKS from: {jwks_url}")
-    return jwks
+    last_exc: Exception | None = None
+    for url in candidates:
+        try:
+            resp = requests.get(url, timeout=5)
+            # Accept 200 responses only
+            if resp.status_code != 200:
+                raise requests.HTTPError(f"HTTP {resp.status_code}: {resp.reason}")
+
+            data = resp.json()
+
+            # Some endpoints return OpenID config containing a `jwks_uri` entry
+            if "keys" not in data and "jwks_uri" in data:
+                jwks_uri = data["jwks_uri"]
+                resp = requests.get(jwks_uri, timeout=5)
+                resp.raise_for_status()
+                data = resp.json()
+
+            if "keys" not in data:
+                raise ValueError("No 'keys' in JWKS response")
+
+            JWKS_CACHE["keys"] = data
+            JWKS_CACHE["fetched_at"] = now
+            print(f"Fetched JWKS from: {url}")
+            return data
+        except Exception as e:  # pragma: no cover - network/requests behavior
+            last_exc = e
+            print(f"JWKS fetch attempt failed for {url}: {e}")
+            continue
+
+    # Nothing worked
+    print(f"All JWKS endpoints failed; tried: {candidates}; last error: {last_exc}")
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Unable to fetch JWKS for token verification",
+    )
 
 
 def _base64url_to_int(val: str) -> int:
